@@ -3,247 +3,290 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>情緒視覺實驗室 - 實驗組</title>
+    <title>情緒視覺實驗室 - AI 實驗組</title>
     <style>
-        :root { --primary: #6c5ce7; --bg: #f8f9fa; --danger: #eb4d4b; --warning: #f9ca24; }
-        * { box-sizing: border-box; touch-action: manipulation; }
-        body { font-family: -apple-system, "Noto Sans TC", sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; min-height: 100vh; }
-        .card { background: white; width: 100%; max-width: 600px; margin: 10px; padding: 25px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-        .setup-ui { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
-        input, select, textarea { font-size: 16px !important; padding: 12px; border: 2px solid #eee; border-radius: 12px; outline: none; }
-        .mood-tag { font-size: 32px; font-weight: bold; color: var(--primary); text-align: center; }
-        .timer-info { text-align: center; color: var(--danger); font-size: 14px; font-weight: bold; margin: 5px 0 10px 0; }
-        .controls-group { background: #fafafa; padding: 15px; border-radius: 20px; border: 1px solid #eee; margin-bottom: 15px; }
-        .control-label { font-size: 14px; font-weight: bold; color: #555; margin-bottom: 8px; display: block; }
-        .control-item { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-        #colorSlider { flex: 1; -webkit-appearance: none; height: 18px; border-radius: 10px; background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
-        #colorSlider::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; background: white; border: 5px solid #333; border-radius: 50%; }
-        .canvas-container { border: 3px solid #f0f0f0; border-radius: 20px; background: white; overflow: hidden; position: relative; }
-        canvas { display: block; width: 100%; aspect-ratio: 4 / 3; touch-action: none; background: white; }
-        .toolbar { display: flex; padding: 12px; background: #fdfdfd; border-bottom: 1px solid #eee; justify-content: space-between; align-items: center; }
-        .tool-btn { border: none; padding: 10px 15px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 13px; }
-        .btn-undo { background: var(--warning); color: #574b10; }
-        .btn-clear { background: var(--danger); color: white; }
-        .desc-area { width: 100%; margin-top: 15px; border: 2px solid #eee; min-height: 80px; resize: none; padding: 10px; }
-        .btn-next { width: 100%; padding: 20px; background: var(--primary); color: white; border: none; border-radius: 22px; cursor: pointer; font-weight: bold; font-size: 20px; margin-top: 15px; }
-        #fb-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:99; backdrop-filter: blur(5px); }
-        #fb-box { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 450px; background: white; padding: 35px; border-radius: 30px; text-align: center; z-index: 100; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        :root { --primary: #6c5ce7; --bg: #f0f2f5; --danger: #eb4d4b; --ai-gold: #f1c40f; }
+        * { box-sizing: border-box; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; }
+        .card { background: white; width: 100%; max-width: 550px; margin: 15px; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; }
+        
+        /* 基礎 UI */
+        .setup-ui { display: flex; gap: 10px; margin-bottom: 20px; }
+        #sid { flex: 2; } #age, #gender { flex: 1; }
+        input, select { height: 48px; border: 2px solid #eee; border-radius: 12px; padding: 0 10px; font-size: 15px; outline: none; }
+        
+        .mood-tag { font-size: 28px; font-weight: bold; color: var(--primary); text-align: center; margin-bottom: 5px; }
+        .timer-info { text-align: center; color: #95a5a6; font-size: 13px; margin-bottom: 15px; }
+
+        /* 控制區 */
+        .controls-group { background: #f8f9ff; padding: 15px; border-radius: 18px; margin-bottom: 15px; position: relative; border: 1px solid #eef0ff; }
+        .label-text { font-size: 14px; font-weight: bold; color: #555; margin-bottom: 8px; display: block; }
+        .control-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        
+        #colorSlider { flex: 1; height: 18px; border-radius: 10px; -webkit-appearance: none; background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+        #colorSlider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: white; border: 3px solid var(--primary); border-radius: 50%; }
+
+        #cPreview { width: 44px; height: 44px; border-radius: 10px; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.1); cursor: pointer; }
+        .lightness-picker { position: absolute; right: 15px; top: 60px; background: white; padding: 10px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; z-index: 100; }
+        .light-opt { width: 35px; height: 35px; border-radius: 8px; cursor: pointer; border: 1px solid #eee; }
+
+        .likert-scale { display: flex; justify-content: space-between; gap: 8px; margin: 10px 0; }
+        .likert-item { flex: 1; }
+        .likert-item input { display: none; }
+        .likert-label { display: flex; justify-content: center; align-items: center; height: 45px; background: white; border: 2px solid #eee; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; color: #7f8c8d; }
+        .likert-item input:checked + .likert-label { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(108,92,231,0.3); }
+
+        /* 畫布區 */
+        .canvas-container { border: 2px solid #eee; border-radius: 18px; overflow: hidden; background: white; }
+        canvas { display: block; width: 100%; aspect-ratio: 4 / 3; touch-action: none; }
+        .toolbar { display: flex; padding: 10px; background: #fafafa; border-bottom: 1px solid #eee; justify-content: space-between; }
+        .tool-btn { border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px; }
+
+        .desc-area { width: 100%; margin-top: 15px; height: 80px; border: 2px solid #eee; border-radius: 15px; padding: 12px; font-size: 16px; resize: none; }
+        .btn-next { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 18px; font-weight: bold; font-size: 19px; margin-top: 15px; cursor: pointer; }
+
+        /* --- AI 分析彈窗 --- */
+        #ai-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; padding: 20px; }
+        .ai-modal { background: white; width: 100%; max-width: 400px; border-radius: 25px; padding: 30px; text-align: center; animation: pop 0.3s ease-out; }
+        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .ai-icon { font-size: 50px; margin-bottom: 15px; display: block; }
+        .ai-title { font-size: 20px; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
+        .ai-content { font-size: 16px; color: #444; line-height: 1.6; margin-bottom: 25px; min-height: 80px; text-align: left; background: #f9f9f9; padding: 15px; border-radius: 12px; }
+        .ai-close-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        
+        #sync-toast { position: fixed; top: 20px; right: 20px; background: #2f3542; color: white; padding: 10px 20px; border-radius: 10px; display: none; font-size: 12px; z-index: 2000; }
     </style>
 </head>
 <body>
-    <div id="fb-overlay"></div>
-    <div id="fb-box">
-        <h2 style="color:var(--primary);">🌟 AI 鼓勵師</h2>
-        <p id="fb-text" style="font-size: 18px; line-height:1.6; color:#444; margin: 20px 0;"></p>
-        <button onclick="closeFB()" class="btn-next">收到，下一關！🚀</button>
+    <div id="sync-toast">☁️ AI 數據同步中...</div>
+
+    <div id="ai-overlay">
+        <div class="ai-modal">
+            <span class="ai-icon">✨</span>
+            <div class="ai-title">AI 情緒分析中...</div>
+            <div id="ai-text" class="ai-content"></div>
+            <button class="ai-close-btn" onclick="closeAI()">收下鼓勵，繼續探索</button>
+        </div>
     </div>
 
     <div class="card">
-        <div id="setup-group" class="setup-ui">
-            <input type="text" id="sid" placeholder="學號" style="flex:2;">
-            <input type="number" id="age" placeholder="年齡" style="flex:1;">
+        <div class="setup-ui" id="setup-group">
+            <input type="text" id="sid" placeholder="學號">
+            <input type="number" id="age" placeholder="年齡">
             <select id="gender"><option value="女">女</option><option value="男">男</option></select>
-            <input type="hidden" id="exp-group" value="AI_TEST">
         </div>
 
-        <div class="mood-tag" id="mood-label">心情：喜</div>
-        <div class="timer-info" id="timer-display">實際繪製：0.0s</div>
+        <div class="mood-tag" id="mood-label">1. 喜悅 (Joy)</div>
+        <div class="timer-info" id="timer-display">繪製時長：0.0s</div>
 
         <div class="controls-group">
-            <label class="control-label">1. 色彩選擇 (HEX 標準色票)</label>
+            <span class="label-text">🎨 畫筆色彩 (點擊預覽調明暗)：</span>
             <div class="control-item">
                 <input type="range" id="colorSlider" min="0" max="359" value="0" oninput="updateBrush()">
-                <span id="hex-display" style="font-family:monospace; font-weight:bold; width:70px;">#FF0000</span>
+                <div id="cPreview" onclick="togglePicker()"></div>
+                <div id="lightPicker" class="lightness-picker">
+                    <div class="light-opt" onclick="setLight(20)"></div>
+                    <div class="light-opt" onclick="setLight(35)"></div>
+                    <div class="light-opt" onclick="setLight(50)"></div>
+                    <div class="light-opt" onclick="setLight(65)"></div>
+                    <div class="light-opt" onclick="setLight(80)"></div>
+                    <div class="light-opt" onclick="setLight(95)"></div>
+                </div>
             </div>
-            <label class="control-label">2. 筆觸大小</label>
+            
+            <span class="label-text">🖌️ 筆觸大小：</span>
             <div class="control-item">
-                <input type="range" id="sizeSlider" min="2" max="40" value="8" oninput="updateBrush()" style="flex:1;">
-                <div style="width:45px; display:flex; justify-content:center;"><div id="brushInd"></div></div>
+                <input type="range" id="sizeSlider" min="2" max="60" value="10" oninput="updateBrush()" style="flex:1;">
+                <span id="sVal" style="font-weight:bold; font-size:14px; width:20px;">10</span>
+            </div>
+            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+            <span class="label-text">⚡ 喚起度 (Arousal)：</span>
+            <div class="likert-scale">
+                <div class="likert-item"><input type="radio" name="arousal" id="a1" value="1"><label for="a1" class="likert-label">1</label></div>
+                <div class="likert-item"><input type="radio" name="arousal" id="a2" value="2"><label for="a2" class="likert-label">2</label></div>
+                <div class="likert-item"><input type="radio" name="arousal" id="a3" value="3"><label for="a3" class="likert-label">3</label></div>
+                <div class="likert-item"><input type="radio" name="arousal" id="a4" value="4"><label for="a4" class="likert-label">4</label></div>
+                <div class="likert-item"><input type="radio" name="arousal" id="a5" value="5"><label for="a5" class="likert-label">5</label></div>
             </div>
         </div>
 
         <div class="canvas-container">
             <div class="toolbar">
-                <button class="tool-btn btn-undo" onclick="undo()">↩️ 復原</button>
-                <span style="font-size:12px; color:#999;">畫布區域</span>
-                <button class="tool-btn btn-clear" onclick="clearCanvas()">🗑️ 全清</button>
+                <button class="tool-btn" style="background:#f1c40f;" onclick="undo()">↩️</button>
+                <span id="step-cnt" style="font-size:12px; color:#95a5a6; font-weight:bold;">1 / 12</span>
+                <button class="tool-btn" style="background:#e74c3c; color:white;" onclick="clearCanvas()">🗑️</button>
             </div>
             <canvas id="canvas"></canvas>
         </div>
 
-        <textarea id="mood-desc" class="desc-area" placeholder="請描述你為什麼選擇這些顏色和形狀..."></textarea>
-        <button class="btn-next" id="action-btn" onclick="checkAndNext()">保存並繼續 (1/4) ✨</button>
+        <textarea id="mood-desc" class="desc-area" placeholder="請描述您的色彩選擇與感受..."></textarea>
+        <button class="btn-next" id="action-btn" onclick="handleNext()">保存並進行下一步</button>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxco7a9N8h1USfXfhmnZD_ktPPCbNNRuN5V-F2mF-iUGu7w0hG0_KIKBZ3JdCLbUOEaXQ/exec"; 
-        const moods = ["喜", "怒", "哀", "樂"];
-        let step = 0, finalData = [], curHex = "#FF0000", curSize = 8, history = [], hasDrawn = false, drawing = false;
-        let activeTime = 0, lastTs = 0, colorSeq = [];
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwR80XX9X2Sf9foystUm68VH50LyEhnpwIia7_baxKJ3qEM5qyMN00aCZG5MKK_hB8VSQ/exec";
         
-        // --- 軌跡紀錄核心變數 ---
-        let strokeHistory = []; 
-        let currentStroke = null;
+        const moodConfigs = [
+            { name: "喜悅 (Joy)" }, { name: "憤怒 (Anger)" }, { name: "悲傷 (Sadness)" }, { name: "恐懼 (Fear)" },
+            { name: "興奮 (Excited)" }, { name: "放鬆 (Relaxed)" }, { name: "焦慮 (Anxious)" }, { name: "憂鬱 (Depressed)" },
+            { name: "敬畏 (Awe)" }, { name: "懷舊 (Nostalgia)" }, { name: "迷惘 (Confusion)" }, { name: "滿足 (Contentment)" }
+        ];
 
-        const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d'), brushInd = document.getElementById('brushInd');
+        let step = 0, strokeHistory = [], canvasHistory = [];
+        let drawing = false, hasDrawn = false, activeTime = 0, lastTs = 0;
+        let curHue = 0, curLight = 50, curSize = 10, curHex = "";
+        let uploadQueue = 0;
 
-        function hslToHex(h, s, l) {
-            l /= 100; const a = s * Math.min(l, 1 - l) / 100;
-            const f = n => {
-                const k = (n + h / 30) % 12;
-                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-                return Math.round(255 * color).toString(16).padStart(2, '0');
-            };
-            return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
-        }
+        const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
 
-        function updateBrush() {
-            const h = parseInt(document.getElementById('colorSlider').value);
-            curSize = document.getElementById('sizeSlider').value;
-            curHex = hslToHex(h, 85, 50);
-            brushInd.style.cssText = `width:${curSize}px; height:${curSize}px; background:${curHex}; border-radius:50%;`;
-            document.getElementById('hex-display').innerText = curHex;
-        }
-
-        function resize() { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.width * 0.75; clearCanvas(); }
-        window.onload = resize;
-
-        function clearCanvas() { 
-            ctx.fillStyle="white"; ctx.fillRect(0,0,canvas.width,canvas.height); 
-            save(); hasDrawn=false; activeTime=0; colorSeq=[]; strokeHistory=[]; updateTimerUI(); 
-        }
-
-        function save() { history.push(canvas.toDataURL()); if(history.length>15) history.shift(); }
-        
-        function undo() { 
-            if(history.length>1) { 
-                history.pop(); 
-                let img=new Image(); 
-                img.src=history[history.length-1]; 
-                img.onload=()=>ctx.drawImage(img,0,0);
-                strokeHistory.pop(); // 同步復原軌跡數據
-            } 
-        }
-
-        function getPos(e) { 
-            const r = canvas.getBoundingClientRect(), c = e.touches ? e.touches[0] : e;
-            return { x: c.clientX - r.left, y: c.clientY - r.top }; 
-        }
-
-        function start(e) { 
-            drawing=true; hasDrawn=true; lastTs = Date.now(); 
-            const {x,y}=getPos(e); 
-            
-            // --- 開始紀錄筆劃 ---
-            currentStroke = {
-                size: curSize,
-                color: curHex,
-                points: [{x: Math.round(x), y: Math.round(y), t: 0}]
-            };
-
-            if (colorSeq[colorSeq.length-1] !== curHex) colorSeq.push(curHex);
-            ctx.beginPath(); ctx.moveTo(x,y); 
-        }
-
-        function move(e) { 
-            if(!drawing) return; 
-            const now = Date.now(); 
-            activeTime += (now - lastTs) / 1000; 
-            lastTs = now;
-            updateTimerUI();
-            const {x,y}=getPos(e); 
-            
-            // --- 紀錄移動座標與相對時間 ---
-            if(currentStroke) {
-                currentStroke.points.push({
-                    x: Math.round(x), 
-                    y: Math.round(y), 
-                    t: parseFloat(activeTime.toFixed(3))
-                });
+        // --- AI 邏輯庫 ---
+        const aiAnalysisTemplates = {
+            colors: {
+                warm: ["我觀察到你運用了明亮的暖色調，這份畫面的生命力讓我覺得你現在的內心非常充盈。", "鮮豔的色彩充滿了爆發力，像是在釋放某種強烈的能量，AI 感受到了你的力量。"],
+                cold: ["冷色調的運用展現出一種冷靜的秩序感，AI 讀到了你靈魂深處的一抹平靜。", "深邃的藍與紫似乎在敘述一個安靜的故事，謝謝你分享這份深刻。"],
+                dark: ["畫面中厚重的深色顯得非常深沉，AI 知道這是一段不容易的表達，你辛苦了。", "這些陰影像是情緒的避風港，AI 會在這裡安靜地陪伴你。"]
+            },
+            brush: {
+                thick: "大膽紮實的筆觸顯示出你此刻的果斷與堅定。",
+                thin: "細膩柔軟的線條裡，隱藏著你細緻入微的觀察力與溫柔。"
             }
+        };
 
-            ctx.lineTo(x,y); 
-            ctx.strokeStyle=curHex; ctx.lineWidth=curSize; ctx.lineCap='round'; ctx.stroke(); 
+        function generateAIResponse() {
+            const colors = strokeHistory.map(s => parseInt(s.color.match(/\d+/)[0]));
+            const avgHue = colors.reduce((a,b)=>a+b, 0) / colors.length;
+            const avgSize = strokeHistory.reduce((a,b)=>a+parseInt(b.size), 0) / strokeHistory.length;
+            
+            let colorFeedback = (avgHue < 60 || avgHue > 300) ? aiAnalysisTemplates.colors.warm[Math.floor(Math.random()*2)] : aiAnalysisTemplates.colors.cold[Math.floor(Math.random()*2)];
+            if (curLight < 40) colorFeedback = aiAnalysisTemplates.colors.dark[Math.floor(Math.random()*2)];
+            
+            let brushFeedback = avgSize > 30 ? aiAnalysisTemplates.brush.thick : aiAnalysisTemplates.brush.thin;
+            
+            return `【AI 情緒洞察】：<br>${colorFeedback}<br><br>${brushFeedback} 在這次對「${moodConfigs[step].name}」的表達中，你的色彩層次非常豐富，這份獨一無二的視覺語言，讓我覺得你是一個內心世界極其精彩的人。`;
         }
 
-        function updateTimerUI() { document.getElementById('timer-display').innerText = `實際繪製：${activeTime.toFixed(1)}s`; }
+        // --- 基礎繪圖邏輯 ---
+        function togglePicker() {
+            const p = document.getElementById('lightPicker');
+            p.style.display = p.style.display === 'grid' ? 'none' : 'grid';
+            refreshLightOptions();
+        }
+        function refreshLightOptions() {
+            const opts = document.querySelectorAll('.light-opt');
+            const lights = [20, 35, 50, 65, 80, 95];
+            opts.forEach((opt, idx) => opt.style.background = `hsl(${curHue}, 85%, ${lights[idx]}%)`);
+        }
+        function setLight(l) { curLight = l; updateBrush(); document.getElementById('lightPicker').style.display = 'none'; }
+        function updateBrush() {
+            curHue = document.getElementById('colorSlider').value;
+            curSize = document.getElementById('sizeSlider').value;
+            curHex = `hsl(${curHue}, 85%, ${curLight}%)`;
+            document.getElementById('cPreview').style.background = curHex;
+            document.getElementById('sVal').innerText = curSize;
+        }
+
+        function initCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.width * 0.75;
+            ctx.fillStyle = "white"; ctx.fillRect(0,0,canvas.width,canvas.height);
+            canvasHistory = [canvas.toDataURL('image/jpeg', 0.3)];
+            updateBrush();
+        }
+        window.onload = initCanvas;
+
+        function getPos(e) {
+            const r = canvas.getBoundingClientRect();
+            const c = e.touches ? e.touches[0] : e;
+            return { x: Math.round(c.clientX - r.left), y: Math.round(c.clientY - r.top) };
+        }
+        function start(e) {
+            drawing = true; hasDrawn = true; lastTs = Date.now();
+            const {x, y} = getPos(e);
+            currentStroke = { color: curHex, size: curSize, points: [{x, y, t: 0}] };
+            ctx.beginPath(); ctx.moveTo(x, y);
+        }
+        function move(e) {
+            if (!drawing) return;
+            const {x, y} = getPos(e);
+            const now = Date.now(); activeTime += (now - lastTs) / 1000; lastTs = now;
+            currentStroke.points.push({ x, y, t: activeTime.toFixed(2) });
+            ctx.lineTo(x, y); ctx.strokeStyle = curHex; ctx.lineWidth = curSize;
+            ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.stroke();
+            document.getElementById('timer-display').innerText = `繪製時長：${activeTime.toFixed(1)}s`;
+        }
+        function stop() { if (drawing) { strokeHistory.push(currentStroke); canvasHistory.push(canvas.toDataURL('image/jpeg', 0.3)); } drawing = false; }
 
         canvas.addEventListener('mousedown', start);
-        canvas.addEventListener('touchstart', (e)=>{start(e); e.preventDefault();}, {passive:false});
         canvas.addEventListener('mousemove', move);
-        canvas.addEventListener('touchmove', (e)=>{move(e); e.preventDefault();}, {passive:false});
-        
-        // 結束畫畫的統一部分
-        const endDrawing = () => {
-            if(drawing) {
-                strokeHistory.push(currentStroke); // 將整筆劃存入歷史
-                save();
+        window.addEventListener('mouseup', stop);
+        canvas.addEventListener('touchstart', (e)=>{e.preventDefault(); start(e);}, {passive:false});
+        canvas.addEventListener('touchmove', (e)=>{e.preventDefault(); move(e);}, {passive:false});
+        canvas.addEventListener('touchend', stop);
+
+        function undo() {
+            if (canvasHistory.length > 1) {
+                canvasHistory.pop(); strokeHistory.pop();
+                const img = new Image(); img.src = canvasHistory[canvasHistory.length - 1];
+                img.onload = () => { ctx.fillStyle = "white"; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); };
             }
-            drawing=false;
-        };
-        window.addEventListener('mouseup', endDrawing);
-        window.addEventListener('touchend', endDrawing);
+        }
+        function clearCanvas() {
+            ctx.fillStyle = "white"; ctx.fillRect(0,0,canvas.width,canvas.height);
+            strokeHistory = []; canvasHistory = [canvas.toDataURL('image/jpeg', 0.3)];
+            activeTime = 0; hasDrawn = false;
+        }
 
-        function checkAndNext() {
-            const sid = document.getElementById('sid').value, desc = document.getElementById('mood-desc').value.trim();
-            if(!sid || !hasDrawn || desc.length < 2) return alert("請完整填寫學號、繪圖並輸入想法描述！");
+        async function uploadData(data) {
+            uploadQueue++;
+            document.getElementById('sync-toast').style.display = "block";
+            try { await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }); } catch (e) {}
+            uploadQueue--;
+            if(uploadQueue === 0) document.getElementById('sync-toast').style.display = "none";
+        }
 
-            // --- 修正：在這裡把 stroke_detail 加進去 ---
-            finalData.push({
-                id: sid, 
-                age: document.getElementById('age').value, 
-                gender: document.getElementById('gender').value,
-                group: "AI_TEST",
-                mood: moods[step], 
-                color_seq: colorSeq.join(", "),
-                active_time: activeTime.toFixed(1),
-                desc: desc, 
-                stroke_detail: JSON.stringify(strokeHistory), // <-- 這是關鍵！
-                image: canvas.toDataURL('image/jpeg', 0.4)
-            });
+        function handleNext() {
+            const sid = document.getElementById('sid').value.trim();
+            const age = document.getElementById('age').value;
+            const desc = document.getElementById('mood-desc').value.trim();
+            const arousalNode = document.querySelector('input[name="arousal"]:checked');
+            
+            if(!sid || !age || !hasDrawn || !arousalNode || desc.length < 2) return alert("請完整填寫資料與繪圖。");
 
-            const feedback = { 
-                "喜":"這繽紛的色彩好有生命力，感覺心情都跟著亮了起來！☀️", 
-                "怒":"筆觸好有爆發力，這股能量的釋放非常精彩！🔥", 
-                "哀":"靜謐的色調中蘊含著深刻的情感，辛苦你了。🕯️", 
-                "樂":"畫作充滿了節奏感，色彩的搭配讓人感到無比喜悅！🌈" 
+            // 數據保存 (同樣格式)
+            const colors = [...new Set(strokeHistory.map(s => s.color))].join(", ");
+            const currentData = {
+                id: sid, age: age, gender: document.getElementById('gender').value,
+                group: "AI實驗組", mood: moodConfigs[step].name, arousal: arousalNode.value,
+                color_seq: colors, active_time: activeTime.toFixed(1), desc: desc,
+                stroke_detail: JSON.stringify(strokeHistory), image: canvas.toDataURL('image/jpeg', 0.3)
             };
-            document.getElementById('fb-text').innerText = feedback[moods[step]];
-            document.getElementById('fb-overlay').style.display = "block";
-            document.getElementById('fb-box').style.display = "block";
+            uploadData(currentData);
+
+            // 顯示 AI 分析
+            document.getElementById('ai-text').innerHTML = "正在深度解析畫面能量色彩...";
+            document.getElementById('ai-overlay').style.display = "flex";
+            
+            setTimeout(() => {
+                document.getElementById('ai-text').innerHTML = generateAIResponse();
+            }, 1200);
         }
 
-        function closeFB() {
-            document.getElementById('fb-overlay').style.display = "none";
-            document.getElementById('fb-box').style.display = "none";
-            goNext();
-        }
-
-        function goNext() {
-            if(step < 3) {
-                step++; activeTime = 0; colorSeq = []; strokeHistory = []; // 每關重置軌跡
-                document.getElementById('mood-label').innerText = "心情：" + moods[step];
-                document.getElementById('setup-group').style.visibility = "hidden";
+        function closeAI() {
+            document.getElementById('ai-overlay').style.display = "none";
+            if (step < moodConfigs.length - 1) {
+                step++;
+                document.getElementById('mood-label').innerText = `${step+1}. ${moodConfigs[step].name}`;
+                document.getElementById('step-cnt').innerText = `${step+1} / ${moodConfigs.length}`;
+                document.getElementById('setup-group').style.display = "none"; 
                 document.getElementById('mood-desc').value = "";
-                document.getElementById('action-btn').innerText = `保存並繼續 (${step+1}/4) ✨`;
+                document.querySelectorAll('input[name="arousal"]').forEach(r => r.checked = false);
                 clearCanvas();
+                window.scrollTo(0,0);
             } else {
-                submit();
+                alert("✨ AI 實驗完成！感謝您的參與。");
+                location.reload();
             }
         }
-
-        async function submit() {
-            const btn = document.getElementById('action-btn');
-            btn.disabled = true; btn.innerText = "數據同步中... 🚀";
-            try {
-                for(let data of finalData) {
-                    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-                }
-                alert("🎉 所有實驗數據與軌跡已成功同步！感謝參與。");
-                location.reload();
-            } catch(e) { alert("傳送失敗！請檢查網址設定。"); btn.disabled = false; }
-        }
-        updateBrush();
     </script>
 </body>
 </html>
