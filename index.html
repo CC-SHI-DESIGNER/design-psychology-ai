@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>情緒視覺實驗室</title>
+    <title>情緒視覺實驗室 - 實驗組</title>
     <style>
         :root { --primary: #6c5ce7; --bg: #f8f9fa; --danger: #eb4d4b; --warning: #f9ca24; }
         * { box-sizing: border-box; touch-action: manipulation; }
@@ -13,28 +13,19 @@
         input, select, textarea { font-size: 16px !important; padding: 12px; border: 2px solid #eee; border-radius: 12px; outline: none; }
         .mood-tag { font-size: 32px; font-weight: bold; color: var(--primary); text-align: center; }
         .timer-info { text-align: center; color: var(--danger); font-size: 14px; font-weight: bold; margin: 5px 0 10px 0; }
-        
         .controls-group { background: #fafafa; padding: 15px; border-radius: 20px; border: 1px solid #eee; margin-bottom: 15px; }
         .control-label { font-size: 14px; font-weight: bold; color: #555; margin-bottom: 8px; display: block; }
         .control-item { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-        
-        #colorSlider { 
-            flex: 1; -webkit-appearance: none; height: 18px; border-radius: 10px; 
-            background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); 
-        }
+        #colorSlider { flex: 1; -webkit-appearance: none; height: 18px; border-radius: 10px; background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
         #colorSlider::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; background: white; border: 5px solid #333; border-radius: 50%; }
-        
         .canvas-container { border: 3px solid #f0f0f0; border-radius: 20px; background: white; overflow: hidden; position: relative; }
         canvas { display: block; width: 100%; aspect-ratio: 4 / 3; touch-action: none; background: white; }
         .toolbar { display: flex; padding: 12px; background: #fdfdfd; border-bottom: 1px solid #eee; justify-content: space-between; align-items: center; }
         .tool-btn { border: none; padding: 10px 15px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 13px; }
         .btn-undo { background: var(--warning); color: #574b10; }
         .btn-clear { background: var(--danger); color: white; }
-        
-        .desc-area { width: 100%; margin-top: 15px; border: 2px solid #eee; min-height: 80px; resize: none; }
+        .desc-area { width: 100%; margin-top: 15px; border: 2px solid #eee; min-height: 80px; resize: none; padding: 10px; }
         .btn-next { width: 100%; padding: 20px; background: var(--primary); color: white; border: none; border-radius: 22px; cursor: pointer; font-weight: bold; font-size: 20px; margin-top: 15px; }
-        
-        /* AI 反饋彈窗 */
         #fb-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:99; backdrop-filter: blur(5px); }
         #fb-box { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 450px; background: white; padding: 35px; border-radius: 30px; text-align: center; z-index: 100; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
     </style>
@@ -52,15 +43,7 @@
             <input type="text" id="sid" placeholder="學號" style="flex:2;">
             <input type="number" id="age" placeholder="年齡" style="flex:1;">
             <select id="gender"><option value="女">女</option><option value="男">男</option></select>
-<select id="exp-group" style="display:none;">
-    <option value="AI_TEST" selected>實驗組</option>
-</select>
-
-<script>
-    // 在 checkAndNext 邏輯中，這組會 100% 觸發 AI 回饋
-    const groupValue = "AI_TEST"; 
-    // ...其餘繪圖與傳輸代碼不變...
-</script>
+            <input type="hidden" id="exp-group" value="AI_TEST">
         </div>
 
         <div class="mood-tag" id="mood-label">心情：喜</div>
@@ -72,7 +55,6 @@
                 <input type="range" id="colorSlider" min="0" max="359" value="0" oninput="updateBrush()">
                 <span id="hex-display" style="font-family:monospace; font-weight:bold; width:70px;">#FF0000</span>
             </div>
-            
             <label class="control-label">2. 筆觸大小</label>
             <div class="control-item">
                 <input type="range" id="sizeSlider" min="2" max="40" value="8" oninput="updateBrush()" style="flex:1;">
@@ -90,14 +72,11 @@
         </div>
 
         <textarea id="mood-desc" class="desc-area" placeholder="請描述你為什麼選擇這些顏色和形狀..."></textarea>
-        
         <button class="btn-next" id="action-btn" onclick="checkAndNext()">保存並繼續 (1/4) ✨</button>
     </div>
 
     <script>
-        // 請替換為您的 GAS 網址
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypv3jKvNX2-JoBMroLyimu0fl4FDUvcCuepVhhzGEE6tOACgUwyJG4w3fv1PybgOmfzg/exec"; 
-        
         const moods = ["喜", "怒", "哀", "樂"];
         let step = 0, finalData = [], curHex = "#FF0000", curSize = 8, history = [], hasDrawn = false, drawing = false;
         let activeTime = 0, lastTs = 0, colorSeq = [];
@@ -165,10 +144,9 @@
             const sid = document.getElementById('sid').value, desc = document.getElementById('mood-desc').value.trim();
             if(!sid || !hasDrawn || desc.length < 2) return alert("請完整填寫學號、繪圖並輸入想法描述！");
 
-            // 存入數據
             finalData.push({
                 id: sid, age: document.getElementById('age').value, gender: document.getElementById('gender').value,
-                group: document.getElementById('exp-group').value,
+                group: "AI_TEST",
                 mood: moods[step], 
                 color_seq: colorSeq.join(", "),
                 active_time: activeTime.toFixed(1),
@@ -176,16 +154,16 @@
                 image: canvas.toDataURL('image/jpeg', 0.4)
             });
 
-            // 判斷實驗組邏輯
-            const isAI = document.getElementById('exp-group').value === "AI";
-            if (isAI) {
-                const feedback = { "喜":"這繽紛的色彩好有生命力，感覺心情都跟著亮了起來！☀️", "怒":"筆觸好有爆發力，這股能量的釋放非常精彩！🔥", "哀":"靜謐的色調中蘊含著深刻的情感，辛苦你了。🕯️", "樂":"畫作充滿了節奏感，色彩的搭配讓人感到無比喜悅！🌈" };
-                document.getElementById('fb-text').innerText = feedback[moods[step]];
-                document.getElementById('fb-overlay').style.display = "block";
-                document.getElementById('fb-box').style.display = "block";
-            } else {
-                goNext(); // 控制組直接下一題
-            }
+            // 實驗組直接觸發 AI 反饋
+            const feedback = { 
+                "喜":"這繽紛的色彩好有生命力，感覺心情都跟著亮了起來！☀️", 
+                "怒":"筆觸好有爆發力，這股能量的釋放非常精彩！🔥", 
+                "哀":"靜謐的色調中蘊含著深刻的情感，辛苦你了。🕯️", 
+                "樂":"畫作充滿了節奏感，色彩的搭配讓人感到無比喜悅！🌈" 
+            };
+            document.getElementById('fb-text').innerText = feedback[moods[step]];
+            document.getElementById('fb-overlay').style.display = "block";
+            document.getElementById('fb-box').style.display = "block";
         }
 
         function closeFB() {
@@ -222,4 +200,3 @@
     </script>
 </body>
 </html>
-
